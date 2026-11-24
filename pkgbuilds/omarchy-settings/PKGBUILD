@@ -9,11 +9,15 @@
 #  - _commit is the single source of truth for what gets built. _tag is
 #    provenance only (empty when cut from a bare commit). omarchy and
 #    omarchy-settings must always carry identical _tag/_commit/pkgver/sha256sums.
+#
+# OMA12 developer candidate (never published): the owner fork's
+# codex/oma11-basic-vm-menu commit, two commits on the quattro tip 94a8c3c that
+# omarchy-settings-dev pins. pkgver follows its {tag}.r{count}.g{commit:.7}.
 pkgname='omarchy-settings'
-_tag='v4.5.0'
-_commit='a948d8a6871f446b335258c827648ac5f4e9428b'
-pkgver=4.5.0
-pkgrel=2
+_tag=''
+_commit='5b87312de2ad4b2e0451c566a63d062703a15638'
+pkgver=4.0.0.r8271.g5b87312
+pkgrel=1
 pkgdesc='Omarchy user defaults, /etc/skel content, fonts, plymouth theme, and support helpers'
 # Arch-specific because the shipped /etc tree is not the same on every
 # architecture for older sources: their zram and oomd drop-ins belong to the
@@ -134,16 +138,19 @@ if [[ -n "${OMARCHY_SRC:-}" ]]; then
   source=()
   sha256sums=()
 else
-  source=("omarchy::git+https://github.com/omacom/omarchy.git#commit=${_commit}")
-  sha256sums=('bf3220fcc7b9d883a86f1c59efd79ce675fe137cdbb1324e9785c3cc45d01de7')
+  # The owner fork serving omacom/omarchy (there is no sapoepsilon/omarchy).
+  source=("omarchy::git+https://github.com/sapoepsilon/omarchy-mac.git#commit=${_commit}")
+  sha256sums=('c4085075c805d71493b03a229bf8246578a76745d14a026f22dd83512e01438e')
 fi
 
 prepare() {
+  # The candidate's source-revision marker is true only of the pinned checkout,
+  # so a local OMARCHY_SRC tree is refused.
   if [[ -n "${OMARCHY_SRC:-}" ]]; then
-    rm -rf "$srcdir/omarchy"
-    mkdir -p "$srcdir/omarchy"
-    cp -a "${OMARCHY_SRC}/." "$srcdir/omarchy/"
+    echo "OMARCHY_SRC is refused: this candidate builds ${_commit} only" >&2
+    return 1
   fi
+  [[ $(git -C "$srcdir/omarchy" rev-parse HEAD) == "$_commit" ]]
 }
 
 # Print the HOOKS that result from sourcing mkinitcpio drop-ins onto a line.
@@ -540,4 +547,7 @@ EOF
   install -Dm755 bin/omarchy-upload-log "$pkgdir/usr/bin/omarchy-upload-log"
   install -Dm755 bin/omarchy-debug      "$pkgdir/usr/bin/omarchy-debug"
   install -Dm755 bin/omarchy-debug-idle "$pkgdir/usr/bin/omarchy-debug-idle"
+
+  # The commit prepare() checked out, which the candidate set verifies.
+  printf '%s\n' "$_commit" | install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/source-revision"
 }

@@ -7,7 +7,7 @@ pkgname=omarchy-mac-boot
 # pkgver is the UTC commit date of _commit, so it sorts above the fork's
 # 20260921-N. Reset pkgrel to 1 when pkgver changes; bump it to re-pin or
 # rebuild on the same day.
-pkgver=20261121
+pkgver=20261124
 pkgrel=1
 pkgdesc='Apple Silicon boot support for Omarchy: initramfs, in-place encryption, first boot and Limine activation'
 arch=('aarch64')
@@ -21,20 +21,21 @@ provides=('omarchy-apple-boot' 'omarchy-first-boot')
 conflicts=('omarchy-apple-boot' 'omarchy-first-boot')
 replaces=('omarchy-apple-boot' 'omarchy-first-boot')
 install=omarchy-mac-boot.install
-# An exact omarchy-mac-pkgs main commit, never a branch.
-_commit=35dc7edf692a632728f85e904aada5af2d1fe5d4
-# user4k.patch is omacom/omarchy-mac-pkgs#46 against _commit. Drop it, and its
-# line in prepare(), once a re-pin includes it.
-source=("omarchy-mac-pkgs::git+https://github.com/omacom/omarchy-mac-pkgs.git#commit=${_commit}"
-        user4k.patch)
-sha256sums=('5bf090d9cf709d66b23fb3b200543bd8e56371c99da3f46ab98e76d120180b11'
-            '1c7f0b0593351b8954b7fdcae20f23b9ee0ee339791c6e9150d07b8cf7d07c1c')
+# OMA12 developer candidate (never published): an exact commit of the owner
+# fork's codex/basic-vm-packages, never a branch. Until that commit is pushed,
+# OMARCHY_MAC_PKGS_GIT names a verified local mirror of it (file://...); the
+# commit and checksum pin the tree wherever it is fetched from. user4k.patch
+# (omacom/omarchy-mac-pkgs#46 against 35dc7ed) does not apply to it and is left
+# out, so the payload is exactly the reviewed source.
+_commit=8750b164b076c391ac657aa084beec3e3d8fd84e
+_platform_git=${OMARCHY_MAC_PKGS_GIT:-https://github.com/sapoepsilon/omarchy-mac-pkgs.git}
+source=("omarchy-mac-pkgs::git+${_platform_git}#commit=${_commit}")
+sha256sums=('b8f80a5b16dd4955abc06d301d161fd9d4543738dc1ebcf78eaa8de6ab23aa3a')
 
 prepare() {
   # Tests and staging must not be able to read the other package's tree.
   rm -rf "$srcdir/boot"
   cp -a "$srcdir/omarchy-mac-pkgs/omarchy-mac-boot" "$srcdir/boot"
-  patch -d "$srcdir/boot" -Np2 <"$srcdir/user4k.patch"
   [[ $(git -C "$srcdir/omarchy-mac-pkgs" rev-parse HEAD) == "$_commit" ]]
   [[ $(TZ=UTC0 git -C "$srcdir/omarchy-mac-pkgs" show -s --format=%cd --date=format-local:%Y%m%d HEAD) == "$pkgver" ]]
 }

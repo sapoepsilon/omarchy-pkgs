@@ -4,8 +4,8 @@
 pkgname=omarchy-mac
 # pkgver matches omarchy-mac/version at _commit. Bump pkgrel to re-pin or
 # rebuild the same add-on version; reset it to 1 when pkgver increases.
-pkgver=0.2.7
-pkgrel=2
+pkgver=0.2.5
+pkgrel=1
 pkgdesc='Apple Silicon configuration and support services for Omarchy'
 arch=('aarch64')
 groups=('omarchy-platform-apple-silicon')
@@ -17,10 +17,14 @@ url='https://github.com/omacom/omarchy-mac-pkgs'
 license=('MIT')
 makedepends=('git' 'findutils')
 checkdepends=('diffutils' 'python' 'systemd')
-# An exact omarchy-mac-pkgs main commit, never a branch.
-_commit=35dc7edf692a632728f85e904aada5af2d1fe5d4
-source=("omarchy-mac-pkgs::git+https://github.com/omacom/omarchy-mac-pkgs.git#commit=${_commit}")
-sha256sums=('5bf090d9cf709d66b23fb3b200543bd8e56371c99da3f46ab98e76d120180b11')
+# OMA12 developer candidate (never published): an exact commit of the owner
+# fork's codex/basic-vm-packages, never a branch. Until that commit is pushed,
+# OMARCHY_MAC_PKGS_GIT names a verified local mirror of it (file://...); the
+# commit and checksum pin the tree wherever it is fetched from.
+_commit=8750b164b076c391ac657aa084beec3e3d8fd84e
+_platform_git=${OMARCHY_MAC_PKGS_GIT:-https://github.com/sapoepsilon/omarchy-mac-pkgs.git}
+source=("omarchy-mac-pkgs::git+${_platform_git}#commit=${_commit}")
+sha256sums=('b8f80a5b16dd4955abc06d301d161fd9d4543738dc1ebcf78eaa8de6ab23aa3a')
 
 prepare() {
   # Tests and staging must not be able to read the other package's tree.
