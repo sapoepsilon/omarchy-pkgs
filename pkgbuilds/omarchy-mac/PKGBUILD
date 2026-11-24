@@ -5,7 +5,7 @@ pkgname=omarchy-mac
 # pkgver matches omarchy-mac/version at _commit. Bump pkgrel to re-pin or
 # rebuild the same add-on version; reset it to 1 when pkgver increases.
 pkgver=0.2.5
-pkgrel=1
+pkgrel=2
 pkgdesc='Apple Silicon configuration and support services for Omarchy'
 arch=('aarch64')
 groups=('omarchy-platform-apple-silicon')
@@ -48,17 +48,21 @@ package() {
   # (video decode, wf-recorder, widevine, asahi-bless).
   #
   # The GPU drivers are mesa-aurora and vulkan-aurora by name, at least the
-  # edgeC build: the 7.3 kernel names its GPU driver "aurora", which only
-  # aurora_dri.so opens. Stock mesa and vulkan-asahi have none, and a Mac left
-  # on them boots to a black screen. Naming them swaps the stock packages
-  # through their conflicts, on Macs only; nothing replaces mesa, so other
-  # aarch64 machines on [omarchy] keep theirs.
+  # a1969111 build the stable channel ships with the 7.2 kernel. This payload
+  # targets the 7.2 kernels, stock linux-aurora 7.2.11.aurora14 and the side
+  # kernel linux-aurora-vmapple 7.2.11.aurora15vmapple-2, whose GPU driver
+  # registers as "asahi" 0.0.0. The edgeC floor is for the 7.3 kernel's
+  # "aurora" driver. Naming them swaps stock mesa and vulkan-asahi through
+  # their conflicts, on Macs only; nothing replaces mesa, so other aarch64
+  # machines on [omarchy] keep theirs. aurora-touchid-rearm is not a
+  # dependency: this payload never uses it, and it needs the 7.3 kernel's
+  # /dev/sep-bio-rearm.
   depends=('omarchy' 'bash' 'coreutils' 'diffutils' 'grep' 'sed' 'gawk' 'systemd' 'pciutils' 'kmod'
            'mkinitcpio' 'networkmanager' 'iwd' 'python' 'pipewire' 'pipewire-pulse' 'libpulse' 'wireplumber'
            'asahi-audio' 'speakersafetyd' 'alsa-ucm-conf-asahi' 'rtkit' 'pipewire-alsa'
-           'mesa-aurora>=1:26.3.0_devel.20261120.232519.fb3b11e121c'
-           'vulkan-aurora>=1:26.3.0_devel.20261120.232519.fb3b11e121c'
-           'asahi-alarm-keyring' 'aurora-touchid-rearm')
+           'mesa-aurora>=1:26.3.0_devel.20261031.231483.a1969111475'
+           'vulkan-aurora>=1:26.3.0_devel.20261031.231483.a1969111475'
+           'asahi-alarm-keyring')
 
   "$srcdir/addon/install" "$pkgdir"
   install -Dm644 "$srcdir/addon/README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
